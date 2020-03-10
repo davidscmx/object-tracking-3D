@@ -12,7 +12,10 @@ using namespace std;
 
 
 // Create groups of Lidar points whose projection into the camera falls into the same bounding box
-void clusterLidarWithROI(std::vector<BoundingBox> &boundingBoxes, std::vector<LidarPoint> &lidarPoints, float shrinkFactor, cv::Mat &P_rect_xx, cv::Mat &R_rect_xx, cv::Mat &RT)
+void clusterLidarWithROI(std::vector<BoundingBox> &boundingBoxes, 
+                         std::vector<LidarPoint> &lidarPoints, 
+                         float shrinkFactor, cv::Mat &P_rect_xx, 
+                         cv::Mat &R_rect_xx, cv::Mat &RT)
 {
     // loop over all Lidar points and associate them to a 2D bounding box
     cv::Mat X(4, 1, cv::DataType<double>::type);
@@ -130,10 +133,72 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 }
 
 
-// associate a given bounding box with the keypoints it contains
-void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
+static cv::Rect shrink_bounding_box(BoundingBox bounding_box, float shrinkFactor)
 {
-    // ...
+    cv::Rect shrinked_box;
+    shrinked_box.x = bounding_box.roi.x + shrinkFactor * bounding_box.roi.width / 2.0;
+    shrinked_box.y = bounding_box.roi.y + shrinkFactor * bounding_box.roi.height / 2.0;
+    shrinked_box.width = bounding_box.roi.width * (1 - shrinkFactor);
+    shrinked_box.height = bounding_box.roi.height * (1 - shrinkFactor);
+    return shrinked_box;
+}
+
+// associate a given bounding box with the keypoints it contains
+void clusterKptMatchesWithROI(BoundingBox &boundingBoxCurr, BoundingBox &boundingBoxPrev, 
+                              std::vector<cv::KeyPoint> &kptsPrev, 
+                              std::vector<cv::KeyPoint> &kptsCurr, 
+                              std::vector<cv::DMatch> &kptMatches)
+{
+    float mean_dist = 0;
+    double dist_mean = 0;
+    std::vector<cv::DMatch> kptMatches_roi;
+
+    float shrinkFactor = 0.15;
+    cv::Rect shrinkedBoxCurr = shrink_bounding_box(boundingBoxCurr, shrinkFactor);  
+    cv::Rect smallerBoxPrev  = shrink_bounding_box(boundingBoxPrev, shrinkFactor); 
+    
+    //get the matches within curr_boundingBox and pre_boundingBox
+    for(auto it=kptMatches.begin(); it != kptMatches.end(); ++ it)
+    {
+        cv::KeyPoint train = kptsCurr.at(it->trainIdx);
+        auto train_pt = cv::Point(train.pt.x, train.pt.y);
+
+        cv::KeyPoint query = kptsPrev.at(it->queryIdx); 
+        auto query_pt = cv::Point(query.pt.x, query.pt.y);
+
+        // check if point is within current bounding box
+        if (shrinkedBoxCurr.contains(train_pt) && smallerBoxPrev.contains(query_pt)) 
+            kptMatches_roi.push_back(*it);           
+    }
+
+    //caculate the mean distance of all the matches within boundingBox 
+    for (auto it=kptMatches_roi.begin(); it != kptMatches_roi.end(); ++ it)
+    {
+        dist_mean += cv::norm(kptsCurr.at(it->trainIdx).pt - kptsPrev.at(it->queryIdx).pt); 
+    }
+    
+    if (kptMatches_roi.size() > 0)
+    {
+        dist_mean = dist_mean/kptMatches_roi.size();
+    }
+    else
+    {
+        return;
+    } 
+
+    //keep the matches if distance < dist_mean * 1.25
+    double threshold = dist_mean*1.25;
+    for  (auto it = kptMatches_roi.begin(); it != kptMatches_roi.end(); ++it)
+    {
+       float dist = cv::norm(kptsCurr.at(it->trainIdx).pt - kptsPrev.at(it->queryIdx).pt);
+       if (dist< threshold)
+       {
+           boundingBoxCurr.kptMatches.push_back(*it);
+       }
+    }     
+
+    std::cout<<"curr_bbx_matches_size: "<<boundingBoxCurr.kptMatches.size()<<std::endl;
+
 }
 
 
