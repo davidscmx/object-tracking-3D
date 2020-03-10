@@ -94,8 +94,6 @@ int main(int argc, const char *argv[])
         dataBuffer.push_back(frame);
 
         cout << "#1 : LOAD IMAGE INTO BUFFER done" << endl;
-
-
         /* DETECT & CLASSIFY OBJECTS */
 
         float confThreshold = 0.2;
