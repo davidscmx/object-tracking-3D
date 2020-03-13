@@ -26,6 +26,7 @@ In this final project, you will implement the missing parts in the schematic. To
   * Linux: gcc / g++ is installed by default on most Linux distros
   * Mac: same deal as make - [install Xcode command line tools](https://developer.apple.com/xcode/features/)
   * Windows: recommend using [MinGW](http://www.mingw.org/)
+  * Please download the Yolo weights from https://pjreddie.com/media/files/yolov3.weights as they cannot be correctly added to Github
 
 ## Basic Build Instructions
 

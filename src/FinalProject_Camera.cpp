@@ -87,7 +87,7 @@ int main(int argc, const char *argv[])
 
         // load image from file 
         cv::Mat img = cv::imread(imgFullFilename);
-
+        cout << "Loading image: " << imgFullFilename << endl;
         // push image into data frame buffer
         DataFrame frame;
         frame.cameraImg = img;
@@ -130,16 +130,14 @@ int main(int argc, const char *argv[])
         bVis = true;
         if(bVis)
         {
-            show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(2000, 2000), true);
+            show3DObjects((dataBuffer.end()-1)->boundingBoxes, 
+                           cv::Size(4.0, 20.0), cv::Size(500, 500), true);
         }
         bVis = false;
 
         cout << "#4 : CLUSTER LIDAR POINT CLOUD done" << endl;
         
-        
-        // REMOVE THIS LINE BEFORE PROCEEDING WITH THE FINAL PROJECT
-        continue; // skips directly to the next image without processing what comes beneath
-
+       
         /* DETECT IMAGE KEYPOINTS */
 
         // convert current image to grayscale
@@ -148,19 +146,30 @@ int main(int argc, const char *argv[])
 
         // extract 2D keypoints from current image
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "SHITOMASI";
+        string detectorType = "FAST";
 
-        if (detectorType.compare("HARRIS") == 0)
+        if (detectorType.compare("SHITOMASI") == 0)
         {
             detKeypointsShiTomasi(keypoints, imgGray, false);
         }
-        else if (detectorType.compare("SHITOMASI") == 0)
+        // : MP.2 Keypoint Detection
+        // detectorType = HARRIS
+        else if (detectorType.compare("HARRIS") == 0)
         {
             detKeypointsHarris(keypoints, imgGray, false);
         }
-        else
+        // Modern detector types, detectorType = FAST, BRISK, ORB, AKAZESIFT
+        else if (detectorType.compare("FAST")  == 0 ||
+                detectorType.compare("BRISK") == 0 ||
+                detectorType.compare("ORB")   == 0 ||
+                detectorType.compare("AKAZE") == 0 ||
+                detectorType.compare("SIFT")  == 0)
         {
             detKeypointsModern(keypoints, imgGray, detectorType, false);
+        }
+        else
+        {
+            throw invalid_argument(detectorType + "Not a validetectorType. Try SHITOMASI, HARRIS, FAST, BRISK, ORB, AKAZor  SIFT.");
         }
 
         // optional : limit number of keypoints (helpful for debugging and learning)
@@ -265,7 +274,8 @@ int main(int argc, const char *argv[])
                     //// TASK FP.3 -> assign enclosed keypoint matches to bounding box (implement -> clusterKptMatchesWithROI)
                     //// TASK FP.4 -> compute time-to-collision based on camera (implement -> computeTTCCamera)
                     double ttcCamera;
-                    clusterKptMatchesWithROI(*currBB, *prevBB, (dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->kptMatches);                    
+                    clusterKptMatchesWithROI(*currBB, *prevBB, (dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, (dataBuffer.end() - 1)->kptMatches);       
+
                     computeTTCCamera((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
 
