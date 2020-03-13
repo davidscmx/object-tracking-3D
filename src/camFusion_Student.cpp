@@ -217,7 +217,69 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
 }
 
 
-void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
+void matchBoundingBoxes(std::vector<cv::DMatch> &matches, 
+                        std::map<int, int> &bbBestMatches, 
+                        DataFrame &prevFrame, DataFrame &currFrame)
 {
-    // ...
+    int n_prev = prevFrame.boundingBoxes.size();
+    int n_curr = currFrame.boundingBoxes.size();
+
+    int pt_counts[n_prev][n_curr] = {};
+
+    for (auto it = matches.begin(); it != matches.end() - 1; ++it)     
+    {
+        cv::KeyPoint query = prevFrame.keypoints[it->queryIdx];
+        auto query_pt = cv::Point(query.pt.x, query.pt.y);
+        bool query_found = false;
+
+        cv::KeyPoint train = currFrame.keypoints[it->trainIdx];
+        auto train_pt = cv::Point(train.pt.x, train.pt.y);
+        bool train_found = false;
+
+        std::vector<int> query_id, train_id;
+        for (int i = 0; i < n_prev; i++) 
+        {
+            if (prevFrame.boundingBoxes[i].roi.contains(query_pt))            
+             {
+                query_found = true;
+                query_id.push_back(i);
+             }
+        }
+        
+        for (int i = 0; i < n_curr; i++) 
+        {
+            if (currFrame.boundingBoxes[i].roi.contains(train_pt))            
+            {
+                train_found= true;
+                train_id.push_back(i);
+            }
+        }
+
+        if (query_found && train_found) 
+        {
+            for (auto id_prev: query_id)
+            {
+                for (auto id_curr: train_id)
+                {
+                     pt_counts[id_prev][id_curr] += 1;
+                }
+            }
+        }
+    }
+   
+    for (int i = 0; i < n_prev; i++)
+    {  
+        int id_max = 0;
+        int max_count = 0;
+         
+        for (int j = 0; j < n_curr; j++)
+        {
+            if (pt_counts[i][j] > max_count)
+            {  
+                 max_count = pt_counts[i][j];
+                 id_max = j;
+            }
+        }
+        bbBestMatches[i] = id_max;
+    }     
 }
