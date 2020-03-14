@@ -1,12 +1,44 @@
-# SFND 3D Object Tracking
+# 3D Object Tracking
 
-Welcome to the final project of the camera course. By completing all the lessons, you now have a solid understanding of keypoint detectors, descriptors, and methods to match them between successive images. Also, you know how to detect objects in an image using the YOLO deep-learning framework. And finally, you know how to associate regions in a camera image with Lidar points in 3D space. Let's take a look at our program schematic to see what we already have accomplished and what's still missing.
+To complete this project a solid understanding of keypoint detectors, descriptors, and methods to match them between successive images was required. Also,  how to detect objects in an image using the YOLO deep-learning framework. 
+
+Finally, regions in a camera image were associated with Lidar points in 3D space. 
+The program schematic is presented below.
+
 
 <img src="images/course_code_structure.png" width="779" height="414" />
 
-In this final project, you will implement the missing parts in the schematic. To do this, you will complete four major tasks: 
-1. First, you will develop a way to match 3D objects over time by using keypoint correspondences. 
-2. Second, you will compute the TTC based on Lidar measurements. 
+
+1. First, 2D keypoints and descripted are obtained with the Shitomasi keypoint detector and with the BRISK descriptor respectively. Afterwards. these are matched with See images below for examples. These tasks are not part of this project, but have been already completed in the project https://github.com/davidsosa/feature-tracking-2D.
+
+<p>
+<img src="images/img_keypoint.png" width="779" height="414" />
+<p>
+
+<p>
+<em>2D keypoints extracted with the Shitomasi detector. Here only 50 points are visualized</em>
+</p>
+
+<p>
+<img src="images/match_corresp.png" width="779" height="414" />
+
+</p>
+<p>
+<em>Matching of keypoints with the BRISK descriptor. Here only 50 points are visualized</em>
+</p>
+
+
+1. 3D objects are matched over time by using keypoint correspondences. 
+
+https://github.com/davidsosa/object-tracking-3D/blob/master/src/camFusion_Student.cpp#L220
+
+
+2. Second, you will compute the TTC based on Lidar measurements.
+
+
+https://github.com/davidsosa/object-tracking-3D/blob/master/src/camFusion_Student.cpp#L220
+
+
 3. You will then proceed to do the same using the camera, which requires to first associate keypoint matches to regions of interest and then to compute the TTC based on those matches. 
 4. And lastly, you will conduct various tests with the framework. Your goal is to identify the most suitable detector/descriptor combination for TTC estimation and also to search for problems that can lead to faulty measurements by the camera or Lidar sensor. In the last course of this Nanodegree, you will learn about the Kalman filter, which is a great way to combine the two independent TTC measurements into an improved version which is much more reliable than a single sensor alone can be. But before we think about such things, let us focus on your final project in the camera course. 
 
@@ -34,3 +66,15 @@ In this final project, you will implement the missing parts in the schematic. To
 2. Make a build directory in the top level project directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./3D_object_tracking`.
+
+
+## Performance Evaluation 1
+
+If there are Lidar points outside of the car's bumber area, then the Lidar TTC is way off. Therefore it is good to consider a larger shrink factor of 0.25 instead of 0.1
+
+## 6. Performance Evaluation 2
+
+The best observed detector/descriptor combinations are: 
+SHITOMASI/BRISK
+SHITOMASI/BRIEF
+SHITOMASI/ORB

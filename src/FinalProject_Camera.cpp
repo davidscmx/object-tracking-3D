@@ -102,8 +102,6 @@ int main(int argc, const char *argv[])
                       yoloBasePath, yoloClassesFile, yoloModelConfiguration, yoloModelWeights, bVis);
 
         cout << "#2 : DETECT & CLASSIFY OBJECTS done" << endl;
-
-
         /* CROP LIDAR POINTS */
 
         // load 3D Lidar points from file
@@ -118,7 +116,6 @@ int main(int argc, const char *argv[])
         (dataBuffer.end() - 1)->lidarPoints = lidarPoints;
 
         cout << "#3 : CROP LIDAR POINTS done" << endl;
-
 
         /* CLUSTER LIDAR POINT CLOUD */
 
@@ -143,13 +140,30 @@ int main(int argc, const char *argv[])
         cv::Mat imgGray;
         cv::cvtColor((dataBuffer.end()-1)->cameraImg, imgGray, cv::COLOR_BGR2GRAY);
 
+
         // extract 2D keypoints from current image
+        bVis = false;
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
         string detectorType = "FAST";
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
-            detKeypointsShiTomasi(keypoints, imgGray, false);
+            detKeypointsShiTomasi(keypoints, imgGray, bVis);
+        }
+        // : MP.2 Keypoint Detection
+        // detectorType = HARRIS
+        else if (detectorType.compare("HARRIS") == 0)
+        {
+            detKeypointsHarris(keypoints, imgGray, bVis);
+        }
+        // Modern detector types, detectorType = FAST, BRISK, ORB, AKAZESIFT
+        else if (detectorType.compare("FAST")  == 0 ||
+                detectorType.compare("BRISK") == 0 ||
+                detectorType.compare("ORB")   == 0 ||
+                detectorType.compare("AKAZE") == 0 ||
+                detectorType.compare("SIFT")  == 0)
+        {
+            detKeypointsModern(keypoints, imgGray, detectorType, bVis);
         }
         // : MP.2 Keypoint Detection
         // detectorType = HARRIS
@@ -221,6 +235,22 @@ int main(int argc, const char *argv[])
             (dataBuffer.end() - 1)->kptMatches = matches;
 
             cout << "#7 : MATCH KEYPOINT DESCRIPTORS done" << endl;
+            bVis = true;
+            if (bVis)
+            {
+                cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
+                cv::drawMatches((dataBuffer.end() - 2)->cameraImg, (dataBuffer.end() -2)->keypoints,
+                                (dataBuffer.end() - 1)->cameraImg, (dataBuffer.end() -1)->keypoints,
+                                matches, matchImg,
+                                cv::Scalar::all(-1), cv::Scalar::all(-1),
+                                vector<char>(),cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+                string windowName = "Matching keypoints between twocameraimages";
+                cv::namedWindow(windowName, 7);
+                cv::imshow(windowName, matchImg);
+                cv::imwrite("match_corresp.png", matchImg);
+                cout << "Press key to continue to next image" << endl;
+                cv::waitKey(0); // wait for key to be pressed
+            }
 
             
             /* TRACK 3D OBJECT BOUNDING BOXES */
@@ -277,7 +307,7 @@ int main(int argc, const char *argv[])
 
                     computeTTCCamera((dataBuffer.end() - 2)->keypoints, (dataBuffer.end() - 1)->keypoints, currBB->kptMatches, sensorFrameRate, ttcCamera);
                     //// EOF STUDENT ASSIGNMENT
-
+                    cout << "ttc camera " << ttcCamera << endl;
                     bVis = true;
                     if (bVis)
                     {
@@ -292,8 +322,8 @@ int main(int argc, const char *argv[])
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
                         cv::imshow(windowName, visImg);
-                        cout << "Press key to continue to next frame" << endl;
-                        cv::waitKey(0);
+                        
+                        cv::waitKey(1);
                     }
                     bVis = false;
 
