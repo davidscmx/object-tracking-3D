@@ -23,8 +23,6 @@ void cropLidarPoints(std::vector<LidarPoint> &lidarPoints, float minX, float max
     lidarPoints = newLidarPts;
 }
 
-
-
 // Load Lidar points from a given location and store them in a vector
 void loadLidarFromFile(vector<LidarPoint> &lidarPoints, string filename)
 {
@@ -51,7 +49,6 @@ void loadLidarFromFile(vector<LidarPoint> &lidarPoints, string filename)
     }
     fclose(stream);
 }
-
 
 void showLidarTopview(std::vector<LidarPoint> &lidarPoints, cv::Size worldSize, cv::Size imageSize, bool bWait)
 {

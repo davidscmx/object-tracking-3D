@@ -128,7 +128,7 @@ int main(int argc, const char *argv[])
         if(bVis)
         {
             show3DObjects((dataBuffer.end()-1)->boundingBoxes, 
-                           cv::Size(4.0, 20.0), cv::Size(500, 500), true);
+                           cv::Size(3.0, 15.0), cv::Size(250, 250), true);
         }
         bVis = false;
 
@@ -144,7 +144,7 @@ int main(int argc, const char *argv[])
         // extract 2D keypoints from current image
         bVis = false;
         vector<cv::KeyPoint> keypoints; // create empty feature list for current image
-        string detectorType = "FAST";
+        string detectorType = "SHITOMASI";
 
         if (detectorType.compare("SHITOMASI") == 0)
         {
@@ -186,7 +186,7 @@ int main(int argc, const char *argv[])
         }
 
         // optional : limit number of keypoints (helpful for debugging and learning)
-        bool bLimitKpts = true;
+        bool bLimitKpts = false;
         if (bLimitKpts)
         {
             int maxKeypoints = 50;
@@ -203,8 +203,6 @@ int main(int argc, const char *argv[])
         (dataBuffer.end() - 1)->keypoints = keypoints;
 
         cout << "#5 : DETECT KEYPOINTS done" << endl;
-
-
         /* EXTRACT KEYPOINT DESCRIPTORS */
 
         cv::Mat descriptors;
@@ -235,7 +233,7 @@ int main(int argc, const char *argv[])
             (dataBuffer.end() - 1)->kptMatches = matches;
 
             cout << "#7 : MATCH KEYPOINT DESCRIPTORS done" << endl;
-            bVis = true;
+            bVis = false;
             if (bVis)
             {
                 cv::Mat matchImg = ((dataBuffer.end() - 1)->cameraImg).clone();
@@ -322,7 +320,7 @@ int main(int argc, const char *argv[])
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
                         cv::imshow(windowName, visImg);
-                        
+                        cv::imwrite("ttc.png", visImg);
                         cv::waitKey(1);
                     }
                     bVis = false;
